@@ -76,6 +76,7 @@ def collector(all_links: List[str]) -> pd.DataFrame:
         name = get_book_name(soup)
         author = get_book_author(soup)
         price = get_book_price(soup)
+        print(i)
 
         # FYI: https://stackoverflow.com/questions/40913678/creating-a-counter-inside-a-python-for-loop
         df.iloc[i] = [url, name, author, price]

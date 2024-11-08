@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  collector:
+    container_name: collector
+    build:
+      context: ./collect
+      dockerfile: ./Dockerfile
+      
+    environment:
+        #TODO: Change to var
+      - POSTGRES_PASSWORD=1123
+      - POSTGRES_USER=collector
+      - POSTGRES_DB=BooksDB
+      - POSTGRES_PORT=5432
+      - POSTGRES_IP=books_db
+
+
+  db:
+    image: postgres
+    container_name: books_db
+    restart: always
+    shm_size: 128mb
+    environment:
+      #TODO: Change to var
+      POSTGRES_PASSWORD: 1123
+      POSTGRES_USER: collector
+      POSTGRES_DB: BooksDB
+    ports:
+      - 5432:5432
+    
+

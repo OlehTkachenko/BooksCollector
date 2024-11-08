@@ -1,8 +1,10 @@
+import os
 from typing import List
 
 import pandas as pd
 import requests
 from lxml.html import HtmlElement, fromstring
+from sqlalchemy import create_engine
 
 SOURCE_TEMPLATE = "https://www.yakaboo.ua/ua/knigi/dobirki-yakaboo.html?p={number}"
 PREFIX = "https://www.yakaboo.ua"
@@ -85,7 +87,16 @@ def collector(all_links: List[str]) -> pd.DataFrame:
 
 
 def save_to_db(df: pd.DataFrame):
-    pass
+    password = os.environ.get("POSTGRES_PASSWORD")
+    user = os.environ.get("POSTGRES_USER")
+    db_name = os.environ.get("POSTGRES_DB")
+    port = os.environ.get("POSTGRES_PORT")
+    ip = os.environ.get("POSTGRES_IP")
+
+    url = f"postgresql://{user}:{password}@{ip}:{port}/{db_name}"
+    engine = create_engine(url)
+
+    df.to_sql("books", engine)
 
 
 def main():

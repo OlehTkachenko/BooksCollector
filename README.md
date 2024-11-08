@@ -10,6 +10,7 @@ Test pet-project for practice Docker and Docker-Swarm
 - [X] Create docker/docker compose file which will create 2 containers. One for python script. Second one for PostgressDB.
 - [X] Make collect python script save all datas in DB.
 - [] Add logging to code and Optimize + rewrite code
+- [] Add docker volume for logs
 - [] Create script for getting data from DB in CSV format
 
 ### How to use docker

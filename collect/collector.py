@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List
 
@@ -6,23 +7,40 @@ import requests
 from lxml.html import HtmlElement, fromstring
 from sqlalchemy import create_engine
 
+logging.basicConfig(
+    format="{asctime} - [{levelname}] - {message}",
+    style="{",
+    datefmt="%Y-%m-%d %H:%M",
+    level=logging.INFO,
+)
+
 SOURCE_TEMPLATE = "https://www.yakaboo.ua/ua/knigi/dobirki-yakaboo.html?p={number}"
 PREFIX = "https://www.yakaboo.ua"
+PAGE_NR = (
+    9  # Code just for simulation scrapping proces, this value i decided to hardcode.
+)
 
 
 def connector(url: str) -> requests.Response:
     try:
-        response = requests.get(url)
-        response.encoding = "utf-8"
-    # TODO: Change exception handle mechanisme
-    except Exception as e:
+        response = requests.get(url, timeout=10)
+    except requests.exceptions.ConnectTimeout:
+        logging.critical(
+            f"Sth went wrong Connection Timeout. Check if you can reach link: {url}"
+        )
         raise
+
+    response.encoding = "utf-8"
 
     return response
 
 
 def get_book_links(url: str) -> List[str]:
     response = connector(url)
+
+    if response.status_code != 200:
+        logging.warning(f"Bad request {response.status_code} from page: {url}.")
+        return []
 
     soup = fromstring(response.text)
 
@@ -73,15 +91,22 @@ def collector(all_links: List[str]) -> pd.DataFrame:
 
     for i, url in enumerate(all_links):
         response = connector(url)
+
+        if response.status_code != 200:
+            logging.warning(
+                f"Bad request {response.status_code} from page: {url}. Data cant be collected."
+            )
+            df.iloc[i] = [None, None, None, None]
+            continue
+
         soup = fromstring(response.text)
 
         name = get_book_name(soup)
         author = get_book_author(soup)
         price = get_book_price(soup)
-        print(i)
 
-        # FYI: https://stackoverflow.com/questions/40913678/creating-a-counter-inside-a-python-for-loop
         df.iloc[i] = [url, name, author, price]
+        logging.info(f"Succesfully added record nr: {i+1}")
 
     return df
 
@@ -98,12 +123,14 @@ def save_to_db(df: pd.DataFrame):
 
     df.to_sql("books", engine)
 
+    logging.info(f"Collector save {len(df.index)} rows in db.{url}")
+
 
 def main():
+    logging.info("Collector start working.")
     all_links = []
 
-    # TODO: change range
-    for i in range(2, 7):
+    for i in range(2, PAGE_NR):
         books_page = SOURCE_TEMPLATE.format(number=i)
         links = get_book_links(books_page)
         all_links.extend(links)

@@ -57,7 +57,10 @@ def get_book_links(url: str) -> List[str]:
 
 
 def get_book_name(soup: HtmlElement) -> str:
-    name = soup.xpath('//h1[@id="product-title"]')[0].text
+    try:
+        name = soup.xpath('//h1[@id="product-title"]')[0].text
+    except IndexError:
+        return "Not Found"
     name = name.strip()
     name = name.removeprefix("Книга ")
     return name
@@ -66,7 +69,7 @@ def get_book_name(soup: HtmlElement) -> str:
 def get_book_author(soup: HtmlElement) -> str:
     try:
         author = soup.xpath('//a[@id="product-author"]')[0].text
-    except:
+    except IndexError:
         return "Author Unknown"
 
     author = author.strip()
@@ -74,7 +77,11 @@ def get_book_author(soup: HtmlElement) -> str:
 
 
 def get_book_price(soup: HtmlElement) -> int:
-    price = soup.xpath('//span[@id="product-price"]')[0].text
+    try:
+        price = soup.xpath('//span[@id="product-price"]')[0].text
+    except IndexError:
+        return 0
+
     price = price.removesuffix(" грн")
     price = int(price)
 
